@@ -1,13 +1,14 @@
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import {useLocation} from "react-router-dom";
 import {
+    Alert,
     AppBar, Box, Button,
     Container,
     CssBaseline,
     Grid, InputLabel,
     MenuItem,
     Paper,
-    Select,
+    Select, Snackbar,
     TextField,
     Toolbar,
     Typography
@@ -15,14 +16,16 @@ import {
 
 export function CheckoutPage() {
     const location = useLocation();
+    const [open, setOpen] = useState(false);
+    const [errorMessage, setErrorMessage] = useState();
     const [total, setTotal] = useState(0);
     const [totalKDV, setTotalKDV] = useState(0);
     const [shipment, setShipment] = useState('STANDARD_FREE');
-    const textClient = useRef('');
-    const textAddress = useRef('');
-    const textCard = useRef('');
-    const textExpireDate = useRef('');
-    const textCCV = useRef('');
+    const textClient = useRef();
+    const textAddress = useRef();
+    const textCard = useRef();
+    const textExpireDate = useRef();
+    const textCCV = useRef();
 
     const calculatePrices = useCallback((ship) => {
         if (location.state.selectedProducts) {
@@ -44,29 +47,57 @@ export function CheckoutPage() {
         calculatePrices(shipment);
     }, [calculatePrices, shipment]);
 
+    const handleClose = () => {
+        setOpen(false);
+    };
+
     const handleBuyNow = () => {
+        if (!textClient.current.value || !textAddress.current.value || !textCard.current.value ||
+            !textExpireDate.current.value) {
+            setErrorMessage('Required Fields Empty!');
+            setOpen(true);
+            return;
+        }
         const data = {
             name: textClient.current.value,
             address: textAddress.current.value,
             shippingOption: shipment !== 'STANDARD_FREE' ? 'EXPRESS' : shipment,
+            products: location.state.selectedProducts,
             card: {
                 cardNumber: textCard.current.value, ccv: textCCV.current.value,
                 expirationDate: textExpireDate.current.value
             }
-        }
+        };
+
         const requestOptions = {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data)
         };
         fetch('http://localhost:8080/api/v1/orders', requestOptions)
-            .then(response => response.json())
-            .then(json => console.log(json))
-            .catch(error => console.error(error));
+            .then(async response => {
+                const result = await response.json();
+                if (response.status !== 201) {
+                    setErrorMessage(result.message);
+                } else {
+                    setErrorMessage("Successful");
+                }
+                setOpen(true);
+                return result;
+            })
+            .catch(error => {
+                setErrorMessage(error.message);
+                setOpen(true);
+            });
     };
 
     return (
         <React.Fragment>
+            <Snackbar open={open} autoHideDuration={5000} onClose={handleClose}>
+                <Alert onClose={handleClose} severity="error" sx={{width: '100%'}}>
+                    {errorMessage}
+                </Alert>
+            </Snackbar>
             <CssBaseline/>
             <AppBar
                 position="absolute"
@@ -94,7 +125,6 @@ export function CheckoutPage() {
                                 name="name"
                                 label="Client name"
                                 fullWidth
-                                variant="standard"
                             />
                         </Grid>
                         <Grid item xs={12}>
@@ -105,7 +135,6 @@ export function CheckoutPage() {
                                 name="address"
                                 label="Address"
                                 fullWidth
-                                variant="standard"
                             />
                         </Grid>
                         <Grid item xs={12} sm={6}>
@@ -127,12 +156,13 @@ export function CheckoutPage() {
                         <Grid item xs={12}>
                             <TextField
                                 required
+                                inputProps={{
+                                    maxLength: 16
+                                }}
                                 id="cardNumber"
                                 name="cardNumber"
                                 label="Card Number"
-                                inputRef={textCard}
                                 fullWidth
-                                variant="standard"
                             />
                         </Grid>
                         <Grid item xs={12} md={6}>
@@ -142,18 +172,22 @@ export function CheckoutPage() {
                                 inputRef={textExpireDate}
                                 label="Expiry date"
                                 fullWidth
-                                variant="standard"
+                                inputProps={{
+                                    maxLength: 5
+                                }}
                             />
                         </Grid>
                         <Grid item xs={12} md={6}>
                             <TextField
                                 required
+                                inputProps={{
+                                    maxLength: 3
+                                }}
                                 id="cvv"
                                 label="CVV"
                                 inputRef={textCCV}
                                 helperText="Last three digits on signature strip"
                                 fullWidth
-                                variant="standard"
                             />
                         </Grid>
                     </Grid>
