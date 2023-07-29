@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import {useLocation} from "react-router-dom";
 import {
     AppBar, Box, Button,
@@ -18,6 +18,11 @@ export function CheckoutPage() {
     const [total, setTotal] = useState(0);
     const [totalKDV, setTotalKDV] = useState(0);
     const [shipment, setShipment] = useState('STANDARD_FREE');
+    const textClient = useRef('');
+    const textAddress = useRef('');
+    const textCard = useRef('');
+    const textExpireDate = useRef('');
+    const textCCV = useRef('');
 
     const calculatePrices = useCallback((ship) => {
         if (location.state.selectedProducts) {
@@ -40,7 +45,21 @@ export function CheckoutPage() {
     }, [calculatePrices, shipment]);
 
     const handleBuyNow = () => {
-        fetch('http://localhost:8080/api/v1/orders')
+        const data = {
+            name: textClient.current.value,
+            address: textAddress.current.value,
+            shippingOption: shipment !== 'STANDARD_FREE' ? 'EXPRESS' : shipment,
+            card: {
+                cardNumber: textCard.current.value, ccv: textCCV.current.value,
+                expirationDate: textExpireDate.current.value
+            }
+        }
+        const requestOptions = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        };
+        fetch('http://localhost:8080/api/v1/orders', requestOptions)
             .then(response => response.json())
             .then(json => console.log(json))
             .catch(error => console.error(error));
@@ -64,11 +83,12 @@ export function CheckoutPage() {
                     </Typography>
                 </Toolbar>
             </AppBar>
-            <Container component="main" maxWidth="md" sx={{mb: 4}}>
+            <Container component="main" maxWidth="sm" sx={{mb: 4}}>
                 <Paper elevation={2} sx={{my: {xs: 3, md: 6}, p: {xs: 2, md: 3}}}>
                     <Grid container spacing={3}>
                         <Grid item xs={12} sm={6}>
                             <TextField
+                                inputRef={textClient}
                                 required
                                 id="name"
                                 name="name"
@@ -77,19 +97,9 @@ export function CheckoutPage() {
                                 variant="standard"
                             />
                         </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField
-                                required
-                                id="lastName"
-                                name="lastName"
-                                label="Last name"
-                                fullWidth
-                                autoComplete="family-name"
-                                variant="standard"
-                            />
-                        </Grid>
                         <Grid item xs={12}>
                             <TextField
+                                inputRef={textAddress}
                                 required
                                 id="address"
                                 name="address"
@@ -120,6 +130,7 @@ export function CheckoutPage() {
                                 id="cardNumber"
                                 name="cardNumber"
                                 label="Card Number"
+                                inputRef={textCard}
                                 fullWidth
                                 variant="standard"
                             />
@@ -128,6 +139,7 @@ export function CheckoutPage() {
                             <TextField
                                 required
                                 id="expDate"
+                                inputRef={textExpireDate}
                                 label="Expiry date"
                                 fullWidth
                                 variant="standard"
@@ -138,6 +150,7 @@ export function CheckoutPage() {
                                 required
                                 id="cvv"
                                 label="CVV"
+                                inputRef={textCCV}
                                 helperText="Last three digits on signature strip"
                                 fullWidth
                                 variant="standard"
