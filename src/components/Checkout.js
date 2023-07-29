@@ -58,6 +58,7 @@ export function CheckoutPage() {
             setOpen(true);
             return;
         }
+        console.log("sasda");
         const data = {
             name: textClient.current.value,
             address: textAddress.current.value,
@@ -162,6 +163,7 @@ export function CheckoutPage() {
                                 id="cardNumber"
                                 name="cardNumber"
                                 label="Card Number"
+                                inputRef={textCard}
                                 fullWidth
                             />
                         </Grid>
