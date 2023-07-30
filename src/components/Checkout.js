@@ -160,6 +160,7 @@ export function CheckoutPage() {
                                 inputProps={{
                                     maxLength: 16
                                 }}
+                                defaultValue="5555555555554444"
                                 id="cardNumber"
                                 name="cardNumber"
                                 label="Card Number"
@@ -171,6 +172,7 @@ export function CheckoutPage() {
                             <TextField
                                 required
                                 id="expDate"
+                                defaultValue="11/2025"
                                 inputRef={textExpireDate}
                                 label="Expiry date"
                                 fullWidth
