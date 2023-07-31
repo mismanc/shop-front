@@ -22,7 +22,7 @@ export function ProductsPage() {
     useEffect(() => {
         if (dataFetched.current) return;
         dataFetched.current = true;
-        fetch('http://localhost:8080/api/v1/products')
+        fetch(`${process.env.REACT_APP_API_ENDPOINT}/api/v1/products`)
             .then(response => response.json())
             .then(json => setProducts(json))
             .catch(error => console.error(error));

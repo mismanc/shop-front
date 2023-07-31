@@ -58,7 +58,6 @@ export function CheckoutPage() {
             setOpen(true);
             return;
         }
-        console.log("sasda");
         const data = {
             name: textClient.current.value,
             address: textAddress.current.value,
@@ -75,7 +74,7 @@ export function CheckoutPage() {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data)
         };
-        fetch('http://localhost:8080/api/v1/orders', requestOptions)
+        fetch(`${process.env.REACT_APP_API_ENDPOINT}/api/v1/orders`, requestOptions)
             .then(async response => {
                 const result = await response.json();
                 if (response.status !== 201) {
@@ -172,7 +171,7 @@ export function CheckoutPage() {
                             <TextField
                                 required
                                 id="expDate"
-                                defaultValue="11/2025"
+                                defaultValue="11/25"
                                 inputRef={textExpireDate}
                                 label="Expiry date"
                                 fullWidth
@@ -187,6 +186,7 @@ export function CheckoutPage() {
                                 inputProps={{
                                     maxLength: 3
                                 }}
+                                defaultValue="123"
                                 id="cvv"
                                 label="CVV"
                                 inputRef={textCCV}
